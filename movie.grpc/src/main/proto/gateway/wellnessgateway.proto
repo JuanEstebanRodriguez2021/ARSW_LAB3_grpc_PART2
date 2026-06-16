@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "edu.eci.arsw.gateway";
+option java_outer_classname = "WellnessGatewayProto";
+
+service WellnessGateway {
+
+  rpc CreateAppointment(GatewayAppointmentRequest)
+      returns (GatewayAppointmentResponse);
+
+  rpc ReserveGymSession(GatewayGymRequest)
+      returns (GatewayGymResponse);
+}
+
+message GatewayAppointmentRequest {
+  int32 studentId = 1;
+  string serviceType = 2;
+  string date = 3;
+}
+
+message GatewayAppointmentResponse {
+  int32 appointmentId = 1;
+  string status = 2;
+}
+
+message GatewayGymRequest {
+  int32 studentId = 1;
+  string timeSlot = 2;
+}
+
+message GatewayGymResponse {
+  int32 reservationId = 1;
+  bool success = 2;
+}
