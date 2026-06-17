@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "edu.eci.arsw.eciciencia";
+option java_outer_classname = "ECICIENCIAProto";
+
+service ActivitiesService {
+
+  rpc ReserveActivity(ActivityRequest)
+      returns (ActivityResponse);
+
+  rpc CancelReservation(CancelRequest)
+      returns (CancelResponse);
+
+  rpc GetReservations(AttendeeRequest)
+      returns (ReservationList);
+}
+
+message ActivityRequest {
+  int32 attendeeId = 1;
+  int32 activityId = 2;
+}
+
+message ActivityResponse {
+  int32 reservationId = 1;
+  bool success = 2;
+}
+
+message CancelRequest {
+  int32 reservationId = 1;
+}
+
+message CancelResponse {
+  bool success = 1;
+}
+
+message AttendeeRequest {
+  int32 attendeeId = 1;
+}
+
+message Reservation {
+  int32 reservationId = 1;
+  int32 attendeeId = 2;
+  int32 activityId = 3;
+  string status = 4;
+}
+
+message ReservationList {
+  repeated Reservation reservations = 1;
+}

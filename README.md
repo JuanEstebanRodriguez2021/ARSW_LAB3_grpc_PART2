@@ -11,6 +11,7 @@ The workshop is divided into three stages:
 1. University Wellness Appointment Management using gRPC.
 2. Decomposition of the system into Microservices.
 3. Integration of services through an API Gateway.
+4. Final exercise of Integration with **ECICIENCIA** platform
 
 The objective is to understand how service contracts, remote procedure calls, microservice decomposition, and gateway patterns can be used to build scalable distributed systems.
 
@@ -224,6 +225,176 @@ The Gateway becomes responsible for request routing, service orchestration, and 
 ### What would happen if a new service were added?
 
 Only the Gateway would need to be updated. Existing clients could continue using the same endpoint without modifications.
+
+---
+
+# Part IV — Eciciencia Platform
+
+## Architecture Diagram
+
+![ECICIENCIA.jpg](docs/ECICIENCIA.jpg)
+
+
+## List of services and responsibilities
+
+### AttendeeService
+
+#### Responsibilities
+- Register event attendees.
+- Retrieve attendee information.
+
+#### Managed Data
+- id
+- name
+- institutionalEmail
+
+#### Operations
+- RegisterAttendee
+- GetAttendee
+
+### ScheduleService
+
+#### Responsibilities
+- Manage the ECICIENCIA agenda.
+- Retrieve available activities.
+- Search activities by time slot.
+
+#### Managed Data
+- activityId
+- title
+- speaker
+- startTime
+- endTime
+- location
+
+#### Operations
+- GetSchedule
+- GetActivitiesByTimeSlot
+
+### ActivitiesService
+
+#### Responsibilities
+- Manage workshop reservations.
+- Associate attendees with activities.
+
+#### Managed Data
+- reservationId
+- attendeeId
+- activityId
+- reservationStatus
+
+#### Operations
+- ReserveWorkshop
+- CancelReservation
+- GetReservations
+
+### CapacityService
+
+#### Responsibilities
+- Control the capacity of each activity.
+- Verify availability before confirming a reservation.
+
+#### Managed Data
+- activityId
+- capacity
+- reservedSeats
+- availableSeats
+
+#### Operations
+- CheckCapacity
+- UpdateCapacity
+
+## Proposed gRPC Contract
+
+```proto
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "edu.eci.arsw.eciciencia";
+option java_outer_classname = "ECICIENCIAProto";
+
+service ActivitiesService {
+
+  rpc ReserveActivity(ActivityRequest)
+      returns (ActivityResponse);
+
+  rpc CancelReservation(CancelRequest)
+      returns (CancelResponse);
+
+  rpc GetReservations(AttendeeRequest)
+      returns (ReservationList);
+}
+
+message ActivityRequest {
+  int32 attendeeId = 1;
+  int32 activityId = 2;
+}
+
+message ActivityResponse {
+  int32 reservationId = 1;
+  bool success = 2;
+}
+
+message CancelRequest {
+  int32 reservationId = 1;
+}
+
+message CancelResponse {
+  bool success = 1;
+}
+
+message AttendeeRequest {
+  int32 attendeeId = 1;
+}
+
+message Reservation {
+  int32 reservationId = 1;
+  int32 attendeeId = 2;
+  int32 activityId = 3;
+  string status = 4;
+}
+
+message ReservationList {
+  repeated Reservation reservations = 1;
+}
+
+```
+
+## API Gateway Description
+
+The ECICIENCIA Gateway acts as the single entry point for all clients.
+
+### Responsibilities
+- Receive requests from web and mobile applications.
+- Route requests to the appropriate microservice.
+- Hide the internal architecture from clients.
+- Centralize validation and future security mechanisms.
+- Allow new services to be added without modifying client applications.
+
+Examples:
+
+- Agenda queries are forwarded to the ScheduleService.
+- Workshop reservations are forwarded to the WorkshopService.
+- Before confirming a reservation, the Gateway communicates with the CapacityService to verify seat availability.
+
+## Why not use a Monolitic Architecture?
+
+Implementing the entire platform as a single monolithic service would create strong coupling between different business domains.
+
+Attendee management, agenda management, workshop reservations, and capacity control have distinct responsibilities and evolve independently.
+
+A change in the reservation module could require redeploying the entire application. Furthermore, scalability would be inefficient because some modules, such as schedule queries, may receive significantly more traffic than others.
+
+A microservices architecture provides several advantages:
+
+- Separation of responsibilities.
+- Lower coupling between modules.
+- Independent deployment.
+- Individual scalability for each service.
+- Better maintainability.
+- Easier integration of new services.
+
+For these reasons, a microservices architecture is more suitable for the ECICIENCIA platform.
 
 ---
 
